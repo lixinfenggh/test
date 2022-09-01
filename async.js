@@ -3,7 +3,7 @@ const fs = require('fs');
 
 const lastCommit = fs.readFileSync('./last-commit').toString();
 
-const allGitLogStr = execSync(`git --git-dir mq-repo/.git log ${lastCommit ? lastCommit+'..' : ''} --pretty=format:"%H %s" --numstat`).toString();
+const allGitLogStr = execSync(`git --git-dir my-repo/.git log ${lastCommit ? lastCommit+'..' : ''} --pretty=format:"%H %s" --numstat`).toString();
 // console.log(allGitLogStr)
 const gitLogs = allGitLogStr.split('\n\n');
 
@@ -39,8 +39,10 @@ for (let log of gitLogs.reverse()) {
 
     console.log(`committing ${commitId} ${commitMsg}`);
 
-    execSync(`git --git-dir mq-repo/.git checkout ${commitId}`)
-    execSync(`rsync -av --exclude='.git' mq-repo/ github-repo`)
+    execSync(`git --git-dir my-repo/.git checkout ${commitId}`)
+    execSync(`rsync -av --exclude='.git' my-repo/ github-repo`)
     execSync(`git --git-dir github-repo/.git add .`)
     execSync(`GIT_COMMITTER_DATE="${new Date(commitTime).toUTCString()}" GIT_AUTHOR_DATE="${new Date(commitTime).toUTCString()}" git --git-dir github-repo/.git commit -m "${commitMsg}"`)
+    execSync(`git --git-dir github-repo/.git push origin HEAD:main`)
+    fs.writeFileSync('last-commit', commitId)
 }
